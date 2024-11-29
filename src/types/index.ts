@@ -27,3 +27,8 @@ export interface Comment {
   createdAt: string;
   postId: string;
 }
+
+export interface ApiError {
+  message: string;
+  status?: number;
+}

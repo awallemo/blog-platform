@@ -7,7 +7,7 @@ import { loginSchema } from '../lib/validation';
 import { useAuthStore } from '../store/authStore';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import api from '../lib/axios';
+import { authService } from '../services/api';
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -17,6 +17,7 @@ const Login = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -24,11 +25,13 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await api.post('/auth/login', data);
-      login(response.data.user, response.data.token);
+      const response = await authService.login(data.email, data.password);
+      login(response.user, response.token);
       navigate('/');
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch (error: any) {
+      setError('root', {
+        message: error.message || 'Login failed. Please try again.',
+      });
     }
   };
 
@@ -49,6 +52,11 @@ const Login = () => {
             {...register('password')}
             error={errors.password?.message}
           />
+          {errors.root && (
+            <p className="text-sm text-red-600 text-center">
+              {errors.root.message}
+            </p>
+          )}
           <Button
             type="submit"
             isLoading={isSubmitting}

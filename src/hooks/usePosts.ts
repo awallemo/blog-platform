@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import api from '../lib/axios';
-import { Post } from '../types';
+import { postService } from '../services/api';
+import { Post, ApiError } from '../types';
 
 export const usePosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -10,12 +10,14 @@ export const usePosts = () => {
   const fetchPosts = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/posts');
-      setPosts(response.data);
       setError(null);
+      const data = await postService.getAll();
+      setPosts(data);
     } catch (err) {
-      setError('Failed to fetch posts');
-      console.error('Error fetching posts:', err);
+      setPosts([]);
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Failed to fetch posts');
+      console.error('Error fetching posts:', apiError);
     } finally {
       setIsLoading(false);
     }
@@ -25,5 +27,10 @@ export const usePosts = () => {
     fetchPosts();
   }, []);
 
-  return { posts, isLoading, error, refetch: fetchPosts };
+  return {
+    posts,
+    isLoading,
+    error,
+    refetch: fetchPosts
+  };
 };
